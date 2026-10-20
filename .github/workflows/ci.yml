@@ -1,0 +1,78 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install
+        run: uv sync --extra dev --python ${{ matrix.python }}
+
+      - name: Lint (ruff)
+        run: uv run ruff check src tests scripts
+
+      - name: Format check (ruff)
+        run: uv run ruff format --check src
+
+      - name: Types (pyright, library code only)
+        run: uv run pyright
+
+      - name: Schemas are current
+        run: uv run python scripts/export_schemas.py --check
+
+      - name: Tests (no gpu)
+        run: uv run pytest -q -m "not gpu"
+
+      # The MVP contract: every §20 criterion has executable evidence.
+      - name: MVP audit (DEVELOPMENT.md 20)
+        run: uv run python scripts/verify_mvp.py --skip-tests
+
+  package:
+    name: build wheel + install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.11"
+
+      # The wheel must ship recipes/*.json and report/templates/*.j2.
+      - name: Build wheel
+        run: uv build --wheel --out-dir dist
+
+      - name: Install the wheel in a clean venv
+        run: |
+          uv venv /tmp/smoke --python 3.11
+          uv pip install --python /tmp/smoke/bin/python dist/*.whl
+          /tmp/smoke/bin/labloop version
+          /tmp/smoke/bin/labloop design "smoke test" --recipe yolo --var batch=8,16 --workdir /tmp/smoke-work
+
+  gpu:
+    # Manual only: a self-hosted runner would execute untrusted PR code on the
+    # owner's GPU machine. Trigger it by hand from the Actions tab.
+    name: GPU checks (manual, real hardware)
+    runs-on: [self-hosted, windows, NVIDIA]
+    needs: quality
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev && uv run pytest -q -m gpu

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>labloop 报告 · {{ report.study_slug }}</title>
+<style>
+  :root { --bg:#0f1115; --card:#171a21; --border:#2a2f3a; --text:#e6e8ee; --dim:#9aa3b2;
+          --ok:#3fb950; --warn:#d29922; --bad:#f85149; --accent:#f0a020; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 "Segoe UI","Microsoft YaHei",system-ui,sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 30px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .meta { color: var(--dim); font-size: 13px; }
+  .banner { margin: 18px 0; padding: 16px 20px; border-radius: 10px; background: var(--card); border-left: 6px solid var(--ok); }
+  .banner .overall { font-size: 19px; font-weight: 700; color: var(--ok); }
+  .banner .reason { color: var(--dim); margin-top: 4px; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 4px 12px; background: var(--card);
+        border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .kv div:nth-child(odd) { color: var(--dim); }
+  .dim { color: var(--dim); font-size: 13px; }
+  .analysis { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+              padding: 12px 16px; margin-bottom: 10px; }
+  ul.findings { padding-left: 20px; margin: 8px 0; }
+  ul.findings li { margin: 4px 0; }
+  .next { background: #14210f; border: 1px solid #2c4a1f; border-radius: 10px; padding: 10px 16px; margin: 10px 0; }
+  .warn { background: #2a2110; border: 1px solid #574218; border-radius: 10px; padding: 10px 16px; margin: 10px 0; color: var(--warn); }
+  .chart { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin: 12px 0; }
+  svg { display: block; width: 100%; height: auto; }
+  .chart-line { fill: none; stroke: #58a6ff; stroke-width: 2; }
+  .chart-dot { fill: #58a6ff; }
+  .chart-best { fill: var(--accent); stroke: #fff; stroke-width: 1.5; }
+  .chart-best-label { fill: var(--accent); font-size: 12px; font-weight: 600; }
+  .chart-grid { stroke: var(--border); stroke-width: 1; }
+  .chart-axis { stroke: #3d4450; stroke-width: 1.5; }
+  .chart-label { fill: var(--dim); font-size: 11px; }
+  .chart-title { fill: var(--text); font-size: 13px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border);
+          border-radius: 10px; overflow: hidden; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--dim); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  .st-ok { color: var(--ok); } .st-failed { color: var(--bad); } .st-timeout, .st-interrupted { color: var(--warn); }
+  code { background:#10131a; border:1px solid var(--border); border-radius:6px; padding:1px 6px; font:13px/1.5 Consolas,monospace; }
+  footer { margin-top: 40px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>labloop 报告</h1>
+  <div class="meta">工具 {{ report.tool.name }} v{{ report.tool.version }} · 生成于 {{ report.generated_at }}</div>
+  <div class="meta">研究问题：{{ report.question }}</div>
+
+  {% if report.best_overall %}
+  <div class="banner">
+    <div class="overall">最佳：{{ report.best_overall.param }} = {{ report.best_overall.value }} → {{ study.primary_metric }} {{ "%.4g"|format(report.best_overall.metric_value) }}</div>
+    {% if report.stopped_reason %}<div class="reason">停止原因：{{ report.stopped_reason }}</div>{% endif %}
+  </div>
+  {% endif %}
+
+  <h2>实验设置</h2>
+  <div class="kv">
+    <div>study</div><div>{{ report.study_slug }}</div>
+    <div>配方</div><div>{{ study.recipe_id }}</div>
+    <div>后端</div><div>{{ study.backend.value }}</div>
+    <div>假设</div><div>{{ study.hypothesis.statement }} <span class="dim">（来源 {{ study.hypothesis.source.value }}）</span></div>
+    <div>研究变量</div><div>{{ study.parameter.name }} ∈ {{ study.parameter.values|join("、") }}</div>
+    <div>固定上下文</div><div>{% for key, value in study.fixed.items() %}{{ key }}={{ value }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
+    <div>目标</div><div>{{ study.goal.value }} {{ study.primary_metric }}</div>
+    <div>实验目录</div><div><code>{{ study.cwd }}</code></div>
+  </div>
+
+  {% for round_data in report.rounds %}
+  <h2>第 {{ round_data.round }} 轮</h2>
+  {% if round_data.analysis %}
+  <div class="analysis">
+    <div>{{ round_data.analysis.summary }}</div>
+    {% if round_data.analysis.findings %}
+    <ul class="findings">
+      {% for finding in round_data.analysis.findings %}
+      <li><span class="dim">[{{ finding.kind }}]</span> {{ finding.detail }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="dim">生成者 {{ round_data.analysis.generated_by.value }} · 置信度 {{ round_data.analysis.confidence.value }}</div>
+  </div>
+  {% if round_data.analysis.next %}
+  <div class="next">下一轮建议：{{ round_data.analysis.next.param }} ∈ {{ round_data.analysis.next.values|join("、") }} —— {{ round_data.analysis.next.rationale }}</div>
+  {% endif %}
+  {% if not round_data.analysis.comparability.ok %}
+  <div class="warn">可比性警告：{{ round_data.analysis.comparability.issues|join("；") }}</div>
+  {% endif %}
+  {% if round_data.analysis.fallback_reason %}
+  <div class="warn">{{ round_data.analysis.fallback_reason }}</div>
+  {% endif %}
+  {% endif %}
+
+  {% for chart in charts_by_round.get(round_data.round, []) %}
+  <div class="chart">{{ chart.svg | safe }}</div>
+  {% endfor %}
+
+  <table>
+    <tr><th>run</th><th>{{ study.parameter.name }}</th><th>{{ study.primary_metric }}</th><th>耗时</th><th>状态</th><th>其他指标 / 提示</th></tr>
+    {% for run in round_data.runs %}
+    <tr>
+      <td>{{ run.run_id }}</td>
+      <td>{{ run.params.get(study.parameter.name, "?") }}</td>
+      <td>{{ "%.4g"|format(run.metrics.get(study.primary_metric)) if run.metrics.get(study.primary_metric) is not none else "—" }}</td>
+      <td class="dim">{{ "%.1f"|format(run.duration_s) }}s</td>
+      <td class="st-{{ run.status.value }}">{{ run.status.value }}</td>
+      <td class="dim">
+        {% for name, value in run.metrics.items() %}{% if name != study.primary_metric %}{{ name }}={{ "%.4g"|format(value) }}{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}
+        {% if run.warnings %} <span class="warn-inline">⚠ {{ run.warnings|map(attribute="message")|join("；") }}</span>{% endif %}
+        {% if run.error %} <span class="st-failed">{{ run.error }}</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endfor %}
+
+  <footer>
+    labloop 只负责设计/执行/分析实验循环；结论基于本轮实际 run 的数据，环境漂移会被可比性守卫标记。报告自包含，可离线打开。
+  </footer>
+</main>
+</body>
+</html>

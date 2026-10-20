@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "Backend": {
+      "enum": [
+        "llm",
+        "offline"
+      ],
+      "title": "Backend",
+      "type": "string"
+    },
+    "BestPoint": {
+      "properties": {
+        "metric_value": {
+          "title": "Metric Value",
+          "type": "number"
+        },
+        "param": {
+          "title": "Param",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "param",
+        "value",
+        "metric_value"
+      ],
+      "title": "BestPoint",
+      "type": "object"
+    },
+    "Comparability": {
+      "properties": {
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "ok": {
+          "default": true,
+          "title": "Ok",
+          "type": "boolean"
+        }
+      },
+      "title": "Comparability",
+      "type": "object"
+    },
+    "Confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "Finding": {
+      "properties": {
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "detail"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "NextSuggestion": {
+      "properties": {
+        "param": {
+          "title": "Param",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "param",
+        "values",
+        "rationale"
+      ],
+      "title": "NextSuggestion",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "best": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BestPoint"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "boundary": {
+      "default": false,
+      "title": "Boundary",
+      "type": "boolean"
+    },
+    "comparability": {
+      "$ref": "#/$defs/Comparability"
+    },
+    "confidence": {
+      "$ref": "#/$defs/Confidence",
+      "default": "medium"
+    },
+    "fallback_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fallback Reason"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "generated_by": {
+      "$ref": "#/$defs/Backend"
+    },
+    "next": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/NextSuggestion"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "round": {
+      "title": "Round",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "round",
+    "generated_by",
+    "summary"
+  ],
+  "title": "RoundAnalysis",
+  "type": "object"
+}

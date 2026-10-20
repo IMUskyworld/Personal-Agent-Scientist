@@ -1,0 +1,83 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "labloop"
+version = "0.1.0"
+description = "Turn a research question into an automated experiment loop: design, run, analyze, iterate"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "labloop contributors" }]
+keywords = ["experiment-automation", "research", "llm", "hyperparameter", "yolo", "agent"]
+classifiers = [
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "typer>=0.12",
+    "pydantic>=2.7",
+    "rich>=13.7",
+    "jinja2>=3.1",
+    "httpx>=0.27",
+    "packaging>=24.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/IMUskyworld/Personal-Agent-Scientist"
+Repository = "https://github.com/IMUskyworld/Personal-Agent-Scientist"
+Issues = "https://github.com/IMUskyworld/Personal-Agent-Scientist/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "pyright>=1.1.350",
+]
+
+[project.scripts]
+labloop = "labloop.cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/labloop"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --color=no"
+pythonpath = ["src", "tests"]
+markers = [
+    "slow: takes more than a few seconds",
+    "gpu: requires a real NVIDIA GPU and a real training stack (skipped by default)",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "RUF"]
+ignore = [
+    "RUF001",  # full-width punctuation is intentional in Chinese user-facing strings
+    "RUF002",
+    "RUF003",
+    "B008",    # typer.Option()/Argument() in defaults is the framework's own idiom
+    "UP042",   # `(str, Enum)` is deliberate: pydantic v2 + JSON rendering rely on .value
+    "SIM105",  # try/except/pass is clearer than contextlib.suppress at these call sites
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["labloop"]
+
+[tool.pyright]
+include = ["src"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+reportUnusedExpression = false

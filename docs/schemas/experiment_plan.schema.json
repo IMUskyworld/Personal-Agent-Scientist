@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "Backend": {
+      "enum": [
+        "llm",
+        "offline"
+      ],
+      "title": "Backend",
+      "type": "string"
+    },
+    "RunSpec": {
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "timeout_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeout S"
+        }
+      },
+      "required": [
+        "id",
+        "command"
+      ],
+      "title": "RunSpec",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notes",
+      "type": "array"
+    },
+    "round": {
+      "title": "Round",
+      "type": "integer"
+    },
+    "runs": {
+      "items": {
+        "$ref": "#/$defs/RunSpec"
+      },
+      "title": "Runs",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Backend"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "default": "offline",
+      "title": "Source"
+    }
+  },
+  "required": [
+    "round",
+    "created_at"
+  ],
+  "title": "ExperimentPlan",
+  "type": "object"
+}

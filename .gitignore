@@ -1,0 +1,25 @@
+# environments
+.venv/
+venv/
+
+# labloop runtime artifacts
+.labloop/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# editors / os
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

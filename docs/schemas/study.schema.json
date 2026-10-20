@@ -1,0 +1,158 @@
+{
+  "$defs": {
+    "Backend": {
+      "enum": [
+        "llm",
+        "offline"
+      ],
+      "title": "Backend",
+      "type": "string"
+    },
+    "Goal": {
+      "enum": [
+        "maximize",
+        "minimize"
+      ],
+      "title": "Goal",
+      "type": "string"
+    },
+    "Hypothesis": {
+      "properties": {
+        "expected_effect": {
+          "default": "unknown",
+          "title": "Expected Effect",
+          "type": "string"
+        },
+        "rationale": {
+          "default": "",
+          "title": "Rationale",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/Source",
+          "default": "offline"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "variable": {
+          "title": "Variable",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "variable"
+      ],
+      "title": "Hypothesis",
+      "type": "object"
+    },
+    "Parameter": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "values"
+      ],
+      "title": "Parameter",
+      "type": "object"
+    },
+    "Source": {
+      "enum": [
+        "llm",
+        "offline",
+        "user"
+      ],
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "backend": {
+      "$ref": "#/$defs/Backend"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "cwd": {
+      "title": "Cwd",
+      "type": "string"
+    },
+    "fixed": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Fixed",
+      "type": "object"
+    },
+    "goal": {
+      "$ref": "#/$defs/Goal",
+      "default": "maximize"
+    },
+    "hypothesis": {
+      "$ref": "#/$defs/Hypothesis"
+    },
+    "parameter": {
+      "$ref": "#/$defs/Parameter"
+    },
+    "primary_metric": {
+      "title": "Primary Metric",
+      "type": "string"
+    },
+    "question": {
+      "title": "Question",
+      "type": "string"
+    },
+    "recipe_id": {
+      "title": "Recipe Id",
+      "type": "string"
+    },
+    "runs_planned": {
+      "default": 0,
+      "title": "Runs Planned",
+      "type": "integer"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "secondary_metrics": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Secondary Metrics",
+      "type": "array"
+    },
+    "slug": {
+      "title": "Slug",
+      "type": "string"
+    }
+  },
+  "required": [
+    "slug",
+    "question",
+    "created_at",
+    "recipe_id",
+    "backend",
+    "primary_metric",
+    "parameter",
+    "hypothesis",
+    "cwd"
+  ],
+  "title": "Study",
+  "type": "object"
+}
